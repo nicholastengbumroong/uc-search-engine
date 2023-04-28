@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 import requests
 import json
 # import sys
-# import string
+import string
 
 
 urls = []
@@ -47,8 +47,11 @@ def crawler(url):
     links = soup.find_all('a')
     for link in links:
         href = link.get('href')
+        #print(link)
+        #print(url)
+        #print(href)
         # check to see if url is part of same domain
-        if not href.startswith('/') or '://' in href:
+        if href is None or not href.startswith('/') and '://' in href:
             continue
         full_url = url + href
         queue.append(full_url)
