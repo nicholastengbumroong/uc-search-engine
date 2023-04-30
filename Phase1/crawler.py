@@ -9,7 +9,6 @@ You can use other languages or libraries, like Java jsoup, but support for these
 from bs4 import BeautifulSoup
 import requests
 import json
-# import sys
 import string
 
 
