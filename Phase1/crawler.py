@@ -9,63 +9,66 @@ You can use other languages or libraries, like Java jsoup, but support for these
 from bs4 import BeautifulSoup
 import requests
 import json
-import string
+import os.path
+import collections
 
-
-urls = []
-queue = []
-visited_urls = []
+seed_urls = []
+queue = collections.deque()
+visited_urls = {}
 outfile = open('data.json', 'a')
-#pages_crawled = 0
+maxFileSize = 100
+# pages_crawled = 0
 
 with open('seeds.txt', 'r') as seeds:
     for seed in seeds:
-        urls.append(str(seed.strip()))
+        seed_urls.append(str(seed.strip()))
         
-def data_dump(data):
-        json.dump(data, outfile)
-        outfile.write('\n')
-        
-        
-def crawler(url):
+def crawl(url):
     #global pages_crawled
     
-    if(url in visited_urls): #we have visited this url 
+    if(url in visited_urls):
         return
     
     html_text = requests.get(url).text
     soup = BeautifulSoup(html_text, 'lxml') 
     body = soup.body.text
     
-    data = {"url": url, "body": body} # add to data
-    data_dump(data) # dump the data
-    
-    visited_urls.append(url) 
+    data = {"url": url, "body": body}
+    json.dump(data, outfile)
+    outfile.write('\n')
+
+    visited_urls[url] = 0
     
     links = soup.find_all('a')
     for link in links:
         href = link.get('href')
-        #print(link)
-        #print(url)
-        #print(href)
         # check to see if url is part of same domain
         if href is None or not href.startswith('/') and '://' in href:
             continue
         full_url = url + href
         queue.append(full_url)
-            
-# crawl starting with given seed pages #
-for url in urls:
-     crawler(url)
-# crawl the rest of the queue #
-while queue:
-    url = queue.pop(0)
-    crawler(url)
+
+def crawler():
+    outfile = open('data.json', 'a')
+    # crawl starting with given seed pages
+    for url in seed_urls:
+        crawl(url)
+    # crawl the rest of the queue 
+    outFileSize_MB = os.fstat(outfile.fileno()).st_size / 1048576
+    countinueCrawl = len(queue) > 0 and outFileSize_MB <= 1
+    while (countinueCrawl):
+        print(outFileSize_MB)
+        url = queue.pop()
+        crawl(url)
 
     """
     - Still need to make it stop crawling after a certain period of time/or data limit
     - Need to account for number of pages to crawl and number of hops
+    - nneds to handle duplicate pages
     - There might be some other smaller stuff missed or that can be improved 
     This is a very rough draft of our crawler
     """
-outfile.close()
+    outfile.close()
+
+crawler()
+print(os.path.getsize('data.json'))
