@@ -15,7 +15,7 @@ import string
 urls = []
 queue = []
 visited_urls = []
-
+outfile = open('data.json', 'a')
 #pages_crawled = 0
 
 with open('seeds.txt', 'r') as seeds:
@@ -23,7 +23,6 @@ with open('seeds.txt', 'r') as seeds:
         urls.append(str(seed.strip()))
         
 def data_dump(data):
-    with open('data.json', 'a') as outfile:
         json.dump(data, outfile)
         outfile.write('\n')
         
@@ -69,3 +68,4 @@ while queue:
     - There might be some other smaller stuff missed or that can be improved 
     This is a very rough draft of our crawler
     """
+outfile.close()
