@@ -13,13 +13,14 @@ import requests
 import json
 import sys
 import math
+import os
 
 seed_urls = []
-maxFileSize = 100
+MAX_FILE_SIZE = 20       # in MB 
 workers = 4
 maxHops = 6
-maxPages = math.ceil(100/workers)
-totalPagesCrawled = Value(c_int)
+# maxPages = math.ceil(100/workers)
+# totalPagesCrawled = Value(c_int)
 MB = 0
 
 with open('seeds.txt', 'r') as seeds:
@@ -40,7 +41,7 @@ def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
     json.dump(data, outfile)
     with totalPagesCrawled.get_lock():
         totalPagesCrawled.value += 1
-    print('crawled : ', totalPagesCrawled.value)
+    #print('crawled : ', totalPagesCrawled.value)
     outfile.write('\n')
     visited_urls[url] = 0
     
@@ -59,16 +60,23 @@ def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
         queuePool[assignedQueueIndex].put(full_url) 
 
 
-def crawler(id: int, queuePool: Array) -> None:
+def crawler(id: int, queuePool: Array) -> None: 
+    crawler_limit = MAX_FILE_SIZE / workers
+    curr_file_size = 0 
     visited_urls = {}
     assignedQueue: Queue  = queuePool[id]
-    outfile = open('data_' + str(id) + '.json', 'a')
+    filename = 'data/data_' + str(id) + '.json' 
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+    outfile = open(filename, 'w')
     # crawl starting with given seed pages
     for url in seed_urls:
         crawl(url, queuePool, visited_urls, outfile)
+     
+    while (curr_file_size < crawler_limit):
+        curr_file_size += os.path.getsize(filename) / (1024*1024.0)
+        # print("Crawler", id, ": ", '%0.2f' % curr_file_size, ' MB')
 
-    while (totalPagesCrawled.value < maxPages):
-        # print(outFileSize_MB)
         url = assignedQueue.get()
         #print('inner fetched url', url)
         crawl(url, queuePool, visited_urls, outfile)
@@ -76,7 +84,7 @@ def crawler(id: int, queuePool: Array) -> None:
 
 if __name__ == '__main__':
     with Pool(processes=workers) as pool:
-        with Manager() as  manager:
+        with Manager() as manager:
             queuePoolArgs = []
             queuePool = [manager.Queue() for i in range(workers)]
             poolArguments = [(i, queuePool) for i in range(workers)]
