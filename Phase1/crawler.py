@@ -96,7 +96,7 @@ def crawler(id: int, queuePool: Array) -> None:
     while (curr_file_size < crawler_limit):
         curr_file_size += os.path.getsize(filename) / (1024*1024.0)
         print("Crawler", id, ": ", '%0.2f' % curr_file_size, ' MB')
-        hashDoc("hi")
+        hashDoc("nba basketball tournament us countries")
 
         url = assignedQueue.get()
         #print('inner fetched url', url)
@@ -120,10 +120,31 @@ This is a very rough draft of our crawler
 """
 
 def hashDoc(textBody):
-    wordList = textBody.split()
-    for word in wordList:
+    wordList = textBody.split() #split the string input into a list of words
+    bWordList = [] #word list but after hashing into binary
+    for word in wordList: #for each word in the list
         wordSum = 0
-        for char in word:
+        for char in word: #for each character in the word 
             print(char)
-            wordSum += ord(char)
+            wordSum += ord(char) #get the ascii value of the character and sum it across the word
         print(wordSum)
+        wordSum = wordSum % 65536
+        binWordSum = format(wordSum, '016b') #turn wordSum into binary format
+        bWordList.append(binWordSum) 
+        print(binWordSum)
+
+    finalFingerPrint = ""
+    for i in range(16): #iterates through the column of each word hashed in binary
+        colSum = 0
+        for j in range(len(bWordList)): #adds -1 or 1 depending on whether it is a 1 or 0 for that word
+            if bWordList[j][i] == '1':
+                colSum += 1
+            else:
+                colSum += -1
+
+        if(colSum > 0):
+            finalFingerPrint += ('1')
+        else:
+            finalFingerPrint += ('0')
+    print('final:', finalFingerPrint)  
+
