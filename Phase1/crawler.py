@@ -13,6 +13,7 @@ import requests
 import json
 import sys
 import math
+import tldextract 
 import os
 
 seed_urls = []
@@ -26,6 +27,15 @@ MB = 0
 with open('seeds.txt', 'r') as seeds:
     for seed in seeds:
         seed_urls.append(str(seed.strip()))
+    
+def sameDomainOrEdu(url, seed_url):
+    domain = tldextract.extract(url).domain
+    suffix = tldextract.extract(url).suffix
+    seed_domain = tldextract.extract(seed_url).domain
+    seed_suffix = tldextract.extract(seed_url).suffix
+    if suffix == "edu" or (domain == seed_domain and suffix == seed_suffix and not url.endswith(".html")):
+        return True
+    return False
      
 def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
     global totalPagesCrawled
@@ -48,11 +58,20 @@ def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
     links = soup.find_all('a')
     for link in links:
         href = link.get('href')
-        # check to see if url is part of same domain
-        if href is None or not href.startswith('/') and '://' in href:
+        # check to see if url is part of same domain or an edu page 
+        if href is None:
             continue
-        full_url = url + href
-        
+        if href.startswith('http'): # check if href is its own link
+            if sameDomainOrEdu(href, url):  # check to see if link is an edu page 
+                full_url = href
+                #print(full_url)
+            else:
+                continue
+        else:                       # else it is part of same domain
+            full_url = url + href
+            # print(full_url)
+            if not sameDomainOrEdu(full_url, url):
+                continue 
         assignedQueueIndex = 0
         for char in full_url:
             assignedQueueIndex += ord(char)
