@@ -5,5 +5,6 @@
   - Install Beautiful Soup, `pip install beautifulsoup4`
   - Install lxml, `pip install lxml`
   - Install requests, `pip install requests`
+  - Instal tldextract `pip install tldextract`
   
   All done!
