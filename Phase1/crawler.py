@@ -9,6 +9,7 @@ You can use other languages or libraries, like Java jsoup, but support for these
 from multiprocessing import Pool, Manager, Array, Queue, Value, Lock
 from bs4 import BeautifulSoup
 from ctypes import c_int
+#from simhash import Simhash
 import requests
 import json
 import sys
@@ -95,6 +96,7 @@ def crawler(id: int, queuePool: Array) -> None:
     while (curr_file_size < crawler_limit):
         curr_file_size += os.path.getsize(filename) / (1024*1024.0)
         print("Crawler", id, ": ", '%0.2f' % curr_file_size, ' MB')
+        hashDoc("hi")
 
         url = assignedQueue.get()
         #print('inner fetched url', url)
@@ -116,3 +118,12 @@ if __name__ == '__main__':
 - There might be some other smaller stuff missed or that can be improved 
 This is a very rough draft of our crawler
 """
+
+def hashDoc(textBody):
+    wordList = textBody.split()
+    for word in wordList:
+        wordSum = 0
+        for char in word:
+            print(char)
+            wordSum += ord(char)
+        print(wordSum)
