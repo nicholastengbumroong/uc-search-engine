@@ -39,8 +39,8 @@ def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
 
     data = {"url": url, "body": body}
     json.dump(data, outfile)
-    with totalPagesCrawled.get_lock():
-        totalPagesCrawled.value += 1
+    # with totalPagesCrawled.get_lock():
+    #     totalPagesCrawled.value += 1
     #print('crawled : ', totalPagesCrawled.value)
     outfile.write('\n')
     visited_urls[url] = 0
@@ -75,7 +75,7 @@ def crawler(id: int, queuePool: Array) -> None:
      
     while (curr_file_size < crawler_limit):
         curr_file_size += os.path.getsize(filename) / (1024*1024.0)
-        # print("Crawler", id, ": ", '%0.2f' % curr_file_size, ' MB')
+        print("Crawler", id, ": ", '%0.2f' % curr_file_size, ' MB')
 
         url = assignedQueue.get()
         #print('inner fetched url', url)
