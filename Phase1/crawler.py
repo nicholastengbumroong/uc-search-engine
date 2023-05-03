@@ -9,7 +9,6 @@ You can use other languages or libraries, like Java jsoup, but support for these
 from multiprocessing import Pool, Manager, Array, Queue, Value, Lock
 from bs4 import BeautifulSoup
 from ctypes import c_int
-#from simhash import Simhash
 import requests
 import json
 import sys
@@ -47,6 +46,7 @@ def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
     html_text = requests.get(url).text
     soup = BeautifulSoup(html_text, 'lxml') 
     body = soup.body.text
+    simHash = hashDoc(body)
 
     data = {"url": url, "body": body}
     json.dump(data, outfile)
@@ -96,7 +96,7 @@ def crawler(id: int, queuePool: Array) -> None:
     while (curr_file_size < crawler_limit):
         curr_file_size += os.path.getsize(filename) / (1024*1024.0)
         print("Crawler", id, ": ", '%0.2f' % curr_file_size, ' MB')
-        hashDoc("nba basketball tournament us countries")
+        #hashDoc("nba basketball tournament us countries")
 
         url = assignedQueue.get()
         #print('inner fetched url', url)
@@ -125,13 +125,13 @@ def hashDoc(textBody):
     for word in wordList: #for each word in the list
         wordSum = 0
         for char in word: #for each character in the word 
-            print(char)
+            #print(char)
             wordSum += ord(char) #get the ascii value of the character and sum it across the word
-        print(wordSum)
+        #print(wordSum)
         wordSum = wordSum % 65536
         binWordSum = format(wordSum, '016b') #turn wordSum into binary format
         bWordList.append(binWordSum) 
-        print(binWordSum)
+        #print(binWordSum)
 
     finalFingerPrint = ""
     for i in range(16): #iterates through the column of each word hashed in binary
@@ -146,5 +146,13 @@ def hashDoc(textBody):
             finalFingerPrint += ('1')
         else:
             finalFingerPrint += ('0')
-    print('final:', finalFingerPrint)  
+    fileSimHash = open("testSimHash", 'a')
+    print('final:', finalFingerPrint)
+    #print(textBody.strip())
+    #fileSimHash.write('final: ')
+    #fileSimHash.write(finalFingerPrint)
+    #fileSimHash.write('\n')
+    #fileSimHash.write(textBody)
+    #fileSimHash.write('\n')
+    #fileSimHash.close()
 
