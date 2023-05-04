@@ -37,7 +37,7 @@ def sameDomainOrEdu(url, seed_url):
         return True
     return False
      
-def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
+def crawl(url, queuePool: Array, visited_urls, outfile, numHops) -> None:
     if(url in visited_urls):
         return
     try:
@@ -55,6 +55,7 @@ def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
         outfile.write('\n')
         visited_urls[url] = 0
         
+        numHops += 1
         links = soup.find_all('a')
         for link in links:
             href = link.get('href')
@@ -76,7 +77,7 @@ def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
             for char in full_url:
                 assignedQueueIndex += ord(char)
             assignedQueueIndex = assignedQueueIndex % workers
-            queuePool[assignedQueueIndex].put(full_url) 
+            queuePool[assignedQueueIndex].put((full_url, numHops)) 
     except Exception as e:
         print(e)
 
@@ -92,7 +93,8 @@ def crawler(id: int, queuePool: Array, shared_total_size: float, lock) -> None:
     outfile = open(filename, 'w')
     # crawl starting with given seed pages
     for url in seed_urls:
-        crawl(url, queuePool, visited_urls, outfile)
+        numHops = 0
+        crawl(url, queuePool, visited_urls, outfile, numHops)
     
     while (shared_total_size.value <= TARGET_SIZE):
         filename = 'data/data_' + str(id) + '_' + str(file_cnt) + '.json' 
@@ -101,8 +103,13 @@ def crawler(id: int, queuePool: Array, shared_total_size: float, lock) -> None:
 
         while (curr_file_size < MAX_FILE_SIZE):
             #hashDoc("nba basketball tournament us countries")
-            url = assignedQueue.get()
-            crawl(url, queuePool, visited_urls, outfile)
+            # url = assignedQueue.get()
+            getQueueTuple = assignedQueue.get()
+            url = getQueueTuple[0]
+            numHops = getQueueTuple[1]
+            print("url: ", url, "hops :", numHops)
+            if(numHops < maxHops):
+                crawl(url, queuePool, visited_urls, outfile, numHops)
 
             temp_file_size = os.path.getsize(filename) / (1024*1024.0)
             new_data_size = temp_file_size - curr_file_size
