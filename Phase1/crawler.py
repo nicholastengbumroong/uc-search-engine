@@ -147,12 +147,12 @@ def hashDoc(textBody):
                 #print(char)
                 wordSum += ord(char) #get the ascii value of the character and sum it across the word
             #print(wordSum)
-            wordSum = wordSum % 65536 # !!! possibly make 64
-            binWordSum = format(wordSum, '016b') #turn wordSum into binary format
+            #wordSum = wordSum % 65536 # no mod for 64 bits
+            binWordSum = format(wordSum, '064b') #turn wordSum into binary format
             bWordList.append(binWordSum) 
             #print(binWordSum)
         finalFingerPrint = ""
-        for i in range(16): #iterates through the column of each word hashed in binary
+        for i in range(64): #iterates through the column of each word hashed in binary
             colSum = 0
             for j in range(len(bWordList)): #adds -1 or 1 depending on whether it is a 1 or 0 for that word
                 if bWordList[j][i] == '1':
@@ -164,7 +164,7 @@ def hashDoc(textBody):
                 finalFingerPrint += ('1')
             else:
                 finalFingerPrint += ('0')
-        if(dupeCheck(finalFingerPrint) != -1): #!!! currently used to check exact dupes, need to implement near-dupe check with hamming distance tmrw
+        if(dupeCheck(finalFingerPrint) != -1): 
             currentFingerprints.append(finalFingerPrint)
             return finalFingerPrint
         else:
@@ -180,24 +180,23 @@ def hashDoc(textBody):
         finalFingerPrint = format(int(finalFingerPrint, 16), '064b')
         #print('value: ', finalFingerPrint)
 
-    if(dupeCheck(finalFingerPrint) != -1): #!!! currently used to check exact dupes, need to implement near-dupe check with hamming distance tmrw
+    if(dupeCheck(finalFingerPrint) != -1): 
         currentFingerprints.append(finalFingerPrint)
     else:
         #print('dupe: ', finalFingerPrint)
-        fileSimHash = open("testSimHash", 'a')
+#        fileSimHash = open("testSimHash", 'a')
     #    print('final:', finalFingerPrint)
     #print(textBody.strip())
-        fileSimHash.write('final: ')
-        fileSimHash.write(finalFingerPrint)
-        fileSimHash.write(' dupe text: ')
-        json.dump(textBody, fileSimHash)
-        fileSimHash.write('\n')
-        fileSimHash.write('\n')
-        fileSimHash.write('\n')
+#        fileSimHash.write('final: ')
+#        fileSimHash.write(finalFingerPrint)
+#        fileSimHash.write(' dupe text: ')
+#        json.dump(textBody, fileSimHash)
+#        fileSimHash.write('\n')
+#        fileSimHash.write('\n')
+#        fileSimHash.write('\n')
     #fileSimHash.write(textBody)
     #fileSimHash.write('\n')
 #    fileSimHash.close()
-        
         return -1
 #    fileSimHash = open("testSimHash", 'a')
 #    print('final:', finalFingerPrint)
@@ -222,7 +221,7 @@ def dupeCheck(simHash):
             if currHash[bit] == simHash[bit]: #if they match, increment matching bits
                 matchingBits += 1
         if(matchingBits >= 54): #if more than 54/64 bits match, return -1 to indicate its a dupe
-            print('simhash: ', simHash, 'already there: ', currHash, 'matchingbits: ', matchingBits)
+            #print('simhash: ', simHash, 'already there: ', currHash, 'matchingbits: ', matchingBits)
             return -1
     currentFingerprints.append(simHash)
     return simHash
