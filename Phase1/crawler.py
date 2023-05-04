@@ -19,10 +19,11 @@ import hashlib
 
 seed_urls = []
 currentFingerprints = []
-TARGET_SIZE = 5        # in MB
-MAX_FILE_SIZE = 0.5       # in MB  
-workers = 4
+workers = 8
 maxHops = 6
+TARGET_SIZE = 500        # in MB
+MAX_FILE_SIZE = TARGET_SIZE / workers  # in MB  
+
 
 with open('seeds.txt', 'r') as seeds:
     for seed in seeds:
@@ -109,7 +110,7 @@ def crawler(id: int, queuePool: Array, shared_total_size: float, lock) -> None:
             curr_file_size = temp_file_size
             with lock:
                 shared_total_size.value += new_data_size
-                print(filename[5:], ":", '%0.2f' % curr_file_size, 'MB', '    Total Size: ', '%0.2f' % shared_total_size.value, 'MB')
+                # print(filename[5:], ":", '%0.2f' % curr_file_size, 'MB', '    Total Size: ', '%0.2f' % shared_total_size.value, 'MB')
 
             if (shared_total_size.value >= TARGET_SIZE): break 
 
