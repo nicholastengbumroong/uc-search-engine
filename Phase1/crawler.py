@@ -28,14 +28,12 @@ MAX_FILE_SIZE = TARGET_SIZE / workers  # in MB
 with open('seeds.txt', 'r') as seeds:
     for seed in seeds:
         seed_urls.append(str(seed.strip()))
-    
-def sameDomainOrEdu(url, seed_url):
-    domain = tldextract.extract(url).domain
-    suffix = tldextract.extract(url).suffix
-    seed_domain = tldextract.extract(seed_url).domain
-    seed_suffix = tldextract.extract(seed_url).suffix
-    if ((suffix == "edu" or (domain == seed_domain and suffix == seed_suffix)) and not url.endswith(".html") and not url.endswith(".pdf")):
-        return True
+
+def urlContainsInvalidResource(url):
+    bannedFileExtensions = [".pdf"]
+    for fileExtension in bannedFileExtensions:
+        if(url.endswith(fileExtension)):
+            return True
     return False
      
 def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
@@ -56,23 +54,32 @@ def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
         outfile.write('\n')
         visited_urls[url] = 0
         
+        full_url = None
         links = soup.find_all('a')
+        
         for link in links:
             href = link.get('href')
-            # check to see if url is part of same domain or an edu page 
+            domain = tldextract.extract(url).domain
+            
+            full_url = ""
+            
             if href is None:
                 continue
-            if href.startswith('http'): # check if href is its own link
-                if sameDomainOrEdu(href, url):  # check to see if link is an edu page 
+            
+            if href.startswith('http') or href.startswith('//'):
+                if tldextract.extract(href).suffix == "edu":
                     full_url = href
-                    #print(full_url)
                 else:
                     continue
-            else:                       # else it is part of same domain
-                full_url = url + href
-                # print(full_url)
-                if not sameDomainOrEdu(full_url, url):
-                    continue 
+            elif href.startswith('/'):
+                baseUrl = url[0: url.find(domain) + len(domain)] + "." + tldextract.extract(url).suffix
+                full_url = baseUrl + href
+            else:
+                continue
+            
+            if(urlContainsInvalidResource(full_url)):
+                continue
+
             assignedQueueIndex = 0
             for char in full_url:
                 assignedQueueIndex += ord(char)
