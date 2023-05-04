@@ -39,8 +39,8 @@ def sameDomainOrEdu(url, seed_url):
         return True
     return False
      
-def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
-    global totalPagesCrawled
+def crawl(url, queuePool: Array, visited_urls, outfile, numHops) -> None:
+    #global totalPagesCrawled
     if(url in visited_urls):
         return
 
@@ -60,7 +60,7 @@ def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
     #print('crawled : ', totalPagesCrawled.value)
     outfile.write('\n')
     visited_urls[url] = 0
-    
+    numHops += 1
     links = soup.find_all('a')
     for link in links:
         href = link.get('href')
@@ -83,9 +83,11 @@ def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
             assignedQueueIndex += ord(char)
         assignedQueueIndex = assignedQueueIndex % workers
         queuePool[assignedQueueIndex].put(full_url) 
+        queuePool[assignedQueueIndex].put(numHops) 
 
 
 def crawler(id: int, queuePool: Array) -> None: 
+    print("in crawler")
     crawler_limit = MAX_FILE_SIZE / workers
     curr_file_size = 0 
     visited_urls = {}
@@ -96,16 +98,29 @@ def crawler(id: int, queuePool: Array) -> None:
     outfile = open(filename, 'w')
     # crawl starting with given seed pages
     for url in seed_urls:
-        crawl(url, queuePool, visited_urls, outfile)
+        numHops = 0
+        crawl(url, queuePool, visited_urls, outfile, numHops)
      
-    while (curr_file_size < crawler_limit):
+    while (curr_file_size < crawler_limit and assignedQueue.qsize() > 2):
         curr_file_size = os.path.getsize(filename) / (1024*1024.0)
         print("Crawler", id, ": ", '%0.2f' % curr_file_size, ' MB')
         #hashDoc("nba basketball tournament us countries")
 
-        url = assignedQueue.get()
+        #url = assignedQueue.get()
+        getQueue = assignedQueue.get()
+        if(isinstance(getQueue, int)):
+            numHops = getQueue
+            getQueue = assignedQueue.get()
+            if(isinstance(getQueue, str)):
+                url = getQueue
+        else:
+            url = getQueue
+            getQueue = assignedQueue.get()
+            if(isinstance(getQueue, int)):
+                numHops = getQueue
         #print('inner fetched url', url)
-        crawl(url, queuePool, visited_urls, outfile)
+        if(numHops < maxHops):
+            crawl(url, queuePool, visited_urls, outfile, numHops)
     outfile.close()
 
 if __name__ == '__main__':
