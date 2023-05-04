@@ -21,7 +21,6 @@ seed_urls = []
 currentFingerprints = []
 TARGET_SIZE = 5        # in MB
 MAX_FILE_SIZE = 0.5       # in MB  
-#curr_total_size = 0        # in MB
 workers = 4
 maxHops = 6
 
@@ -82,10 +81,7 @@ def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
         print(e)
 
 def crawler(id: int, queuePool: Array, shared_total_size: float, lock) -> None: 
-    # global curr_total_size
-    # crawler_limit = TARGET_SIZE / workers
     curr_file_size = 0 
-    # curr_crawler_size = 0
     file_cnt = 0 
 
     visited_urls = {}
@@ -105,9 +101,7 @@ def crawler(id: int, queuePool: Array, shared_total_size: float, lock) -> None:
 
         while (curr_file_size < MAX_FILE_SIZE):
             #hashDoc("nba basketball tournament us countries")
-            # print(filename[5:], ":", '%0.2f' % curr_file_size, ' MB')
             url = assignedQueue.get()
-            #print('inner fetched url', url)
             crawl(url, queuePool, visited_urls, outfile)
 
             temp_file_size = os.path.getsize(filename) / (1024*1024.0)
