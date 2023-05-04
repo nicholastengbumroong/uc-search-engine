@@ -15,8 +15,10 @@ import sys
 import math
 import tldextract 
 import os
+import hashlib
 
 seed_urls = []
+currentFingerprints = []
 MAX_FILE_SIZE = 20       # in MB 
 workers = 4
 maxHops = 6
@@ -47,6 +49,9 @@ def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
     soup = BeautifulSoup(html_text, 'lxml') 
     body = soup.body.text
     simHash = hashDoc(body)
+    #if(simHash == -1): #possibly gonna be used to check dupes like this
+        #return
+    
 
     data = {"url": url, "body": body}
     json.dump(data, outfile)
@@ -122,37 +127,63 @@ This is a very rough draft of our crawler
 def hashDoc(textBody):
     wordList = textBody.split() #split the string input into a list of words
     bWordList = [] #word list but after hashing into binary
-    for word in wordList: #for each word in the list
-        wordSum = 0
-        for char in word: #for each character in the word 
-            #print(char)
-            wordSum += ord(char) #get the ascii value of the character and sum it across the word
-        #print(wordSum)
-        wordSum = wordSum % 65536
-        binWordSum = format(wordSum, '016b') #turn wordSum into binary format
-        bWordList.append(binWordSum) 
-        #print(binWordSum)
+    hashAlg = 2 # 1 = in class hashing algorithm from slides, 2 = SHA-1 hashing algorithm
 
-    finalFingerPrint = ""
-    for i in range(16): #iterates through the column of each word hashed in binary
-        colSum = 0
-        for j in range(len(bWordList)): #adds -1 or 1 depending on whether it is a 1 or 0 for that word
-            if bWordList[j][i] == '1':
-                colSum += 1
+    if(hashAlg == 1):
+        for word in wordList: #for each word in the list
+            wordSum = 0
+            for char in word: #for each character in the word 
+                #print(char)
+                wordSum += ord(char) #get the ascii value of the character and sum it across the word
+            #print(wordSum)
+            wordSum = wordSum % 65536
+            binWordSum = format(wordSum, '016b') #turn wordSum into binary format
+            bWordList.append(binWordSum) 
+            #print(binWordSum)
+        finalFingerPrint = ""
+        for i in range(16): #iterates through the column of each word hashed in binary
+            colSum = 0
+            for j in range(len(bWordList)): #adds -1 or 1 depending on whether it is a 1 or 0 for that word
+                if bWordList[j][i] == '1':
+                    colSum += 1
+                else:
+                    colSum += -1
+
+            if(colSum > 0):
+                finalFingerPrint += ('1')
             else:
-                colSum += -1
-
-        if(colSum > 0):
-            finalFingerPrint += ('1')
+                finalFingerPrint += ('0')
+        if(finalFingerPrint not in currentFingerprints):
+            currentFingerprints.append(finalFingerPrint)
+            return finalFingerPrint
         else:
-            finalFingerPrint += ('0')
-    fileSimHash = open("testSimHash", 'a')
-    print('final:', finalFingerPrint)
+            return -1
+    
+    if(hashAlg == 2):
+        finalFingerPrint = ""
+        for word in wordList: #go through each word in doc
+            hashedWord = hashlib.sha1(word.encode("utf-8")).hexdigest() #hash each word
+            #print('value: ', hashedWord)
+            finalFingerPrint += hashedWord #concatenate hash of each word
+        finalFingerPrint = hashlib.sha1(finalFingerPrint.encode("utf-8")).hexdigest() #rehash the concatenation
+        finalFingerPrint = format(int(finalFingerPrint, 16), '064b')
+        #print('value: ', finalFingerPrint)
+
+    if(finalFingerPrint not in currentFingerprints):
+        currentFingerprints.append(finalFingerPrint)
+    else:
+        return -1
+#    fileSimHash = open("testSimHash", 'a')
+#    print('final:', finalFingerPrint)
     #print(textBody.strip())
-    #fileSimHash.write('final: ')
-    #fileSimHash.write(finalFingerPrint)
-    #fileSimHash.write('\n')
+#    fileSimHash.write('final: ')
+#    fileSimHash.write(finalFingerPrint)
+#    fileSimHash.write(' ')
+#    json.dump(textBody, fileSimHash)
+#    fileSimHash.write('\n')
+#    fileSimHash.write('\n')
+#    fileSimHash.write('\n')
     #fileSimHash.write(textBody)
     #fileSimHash.write('\n')
-    #fileSimHash.close()
-
+#    fileSimHash.close()
+    return finalFingerPrint
