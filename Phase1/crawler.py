@@ -99,7 +99,7 @@ def crawler(id: int, queuePool: Array) -> None:
         crawl(url, queuePool, visited_urls, outfile)
      
     while (curr_file_size < crawler_limit):
-        curr_file_size += os.path.getsize(filename) / (1024*1024.0)
+        curr_file_size = os.path.getsize(filename) / (1024*1024.0)
         print("Crawler", id, ": ", '%0.2f' % curr_file_size, ' MB')
         #hashDoc("nba basketball tournament us countries")
 
