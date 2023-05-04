@@ -19,7 +19,7 @@ import hashlib
 
 seed_urls = []
 currentFingerprints = []
-MAX_FILE_SIZE = 20       # in MB 
+MAX_FILE_SIZE = 4       # in MB 
 workers = 4
 maxHops = 6
 # maxPages = math.ceil(100/workers)
@@ -43,47 +43,48 @@ def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
     global totalPagesCrawled
     if(url in visited_urls):
         return
+    try:
+        #print('fetching url', url)
+        html_text = requests.get(url).text
+        soup = BeautifulSoup(html_text, 'lxml') 
+        body = soup.body.text
+        simHash = hashDoc(body)
+        #if(simHash == -1): #possibly gonna be used to check dupes like this
+            #return
+        
 
-    #print('fetching url', url)
-    html_text = requests.get(url).text
-    soup = BeautifulSoup(html_text, 'lxml') 
-    body = soup.body.text
-    simHash = hashDoc(body)
-    #if(simHash == -1): #possibly gonna be used to check dupes like this
-        #return
-    
-
-    data = {"url": url, "body": body}
-    json.dump(data, outfile)
-    # with totalPagesCrawled.get_lock():
-    #     totalPagesCrawled.value += 1
-    #print('crawled : ', totalPagesCrawled.value)
-    outfile.write('\n')
-    visited_urls[url] = 0
-    
-    links = soup.find_all('a')
-    for link in links:
-        href = link.get('href')
-        # check to see if url is part of same domain or an edu page 
-        if href is None:
-            continue
-        if href.startswith('http'): # check if href is its own link
-            if sameDomainOrEdu(href, url):  # check to see if link is an edu page 
-                full_url = href
-                #print(full_url)
-            else:
+        data = {"url": url, "body": body}
+        json.dump(data, outfile)
+        # with totalPagesCrawled.get_lock():
+        #     totalPagesCrawled.value += 1
+        #print('crawled : ', totalPagesCrawled.value)
+        outfile.write('\n')
+        visited_urls[url] = 0
+        
+        links = soup.find_all('a')
+        for link in links:
+            href = link.get('href')
+            # check to see if url is part of same domain or an edu page 
+            if href is None:
                 continue
-        else:                       # else it is part of same domain
-            full_url = url + href
-            # print(full_url)
-            if not sameDomainOrEdu(full_url, url):
-                continue 
-        assignedQueueIndex = 0
-        for char in full_url:
-            assignedQueueIndex += ord(char)
-        assignedQueueIndex = assignedQueueIndex % workers
-        queuePool[assignedQueueIndex].put(full_url) 
-
+            if href.startswith('http'): # check if href is its own link
+                if sameDomainOrEdu(href, url):  # check to see if link is an edu page 
+                    full_url = href
+                    #print(full_url)
+                else:
+                    continue
+            else:                       # else it is part of same domain
+                full_url = url + href
+                # print(full_url)
+                if not sameDomainOrEdu(full_url, url):
+                    continue 
+            assignedQueueIndex = 0
+            for char in full_url:
+                assignedQueueIndex += ord(char)
+            assignedQueueIndex = assignedQueueIndex % workers
+            queuePool[assignedQueueIndex].put(full_url) 
+    except Exception as e:
+        print(e)
 
 def crawler(id: int, queuePool: Array) -> None: 
     crawler_limit = MAX_FILE_SIZE / workers
@@ -100,7 +101,7 @@ def crawler(id: int, queuePool: Array) -> None:
      
     while (curr_file_size < crawler_limit):
         curr_file_size = os.path.getsize(filename) / (1024*1024.0)
-        print("Crawler", id, ": ", '%0.2f' % curr_file_size, ' MB')
+        #print("Crawler", id, ": ", '%0.2f' % curr_file_size, ' MB')
         #hashDoc("nba basketball tournament us countries")
 
         url = assignedQueue.get()
