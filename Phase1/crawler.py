@@ -19,12 +19,13 @@ import hashlib
 
 seed_urls = []
 currentFingerprints = []
-MAX_FILE_SIZE = 20       # in MB 
+TARGET_SIZE = 4        # in MB
+MAX_FILE_SIZE = 0.5       # in MB  
 workers = 4
 maxHops = 6
 # maxPages = math.ceil(100/workers)
 # totalPagesCrawled = Value(c_int)
-MB = 0
+# MB = 0
 
 with open('seeds.txt', 'r') as seeds:
     for seed in seeds:
@@ -86,27 +87,38 @@ def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
 
 
 def crawler(id: int, queuePool: Array) -> None: 
-    crawler_limit = MAX_FILE_SIZE / workers
+    crawler_limit = TARGET_SIZE / workers
     curr_file_size = 0 
+    curr_crawler_size = 0
+    file_cnt = 0 
+
     visited_urls = {}
     assignedQueue: Queue  = queuePool[id]
-    filename = 'data/data_' + str(id) + '.json' 
+    filename = 'data/data_' + str(id) + '_' + str(file_cnt) + '.json' 
     os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     outfile = open(filename, 'w')
     # crawl starting with given seed pages
     for url in seed_urls:
         crawl(url, queuePool, visited_urls, outfile)
-     
-    while (curr_file_size < crawler_limit):
-        curr_file_size = os.path.getsize(filename) / (1024*1024.0)
-        print("Crawler", id, ": ", '%0.2f' % curr_file_size, ' MB')
-        #hashDoc("nba basketball tournament us countries")
+    
+    while (curr_crawler_size < crawler_limit):
+        while (curr_file_size < MAX_FILE_SIZE):
+            curr_file_size = os.path.getsize(filename) / (1024*1024.0)
+            #hashDoc("nba basketball tournament us countries")
+            print(filename[5:], ":", '%0.2f' % curr_file_size, ' MB')
+            url = assignedQueue.get()
+            #print('inner fetched url', url)
+            crawl(url, queuePool, visited_urls, outfile)
+        curr_crawler_size += curr_file_size
+        curr_file_size = 0
+        outfile.close()
+        print("Crawler", id, ":", '%0.2f' % curr_crawler_size, ' MB')
+        file_cnt += 1
 
-        url = assignedQueue.get()
-        #print('inner fetched url', url)
-        crawl(url, queuePool, visited_urls, outfile)
-    outfile.close()
+        filename = 'data/data_' + str(id) + '_' + str(file_cnt) + '.json' 
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        outfile = open(filename, 'w')
 
 if __name__ == '__main__':
     with Pool(processes=workers) as pool:
