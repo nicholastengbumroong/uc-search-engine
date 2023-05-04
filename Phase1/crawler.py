@@ -19,7 +19,7 @@ import hashlib
 
 seed_urls = []
 currentFingerprints = []
-TARGET_SIZE = 4        # in MB
+TARGET_SIZE = 5        # in MB
 MAX_FILE_SIZE = 0.5       # in MB  
 workers = 4
 maxHops = 6
@@ -104,6 +104,10 @@ def crawler(id: int, queuePool: Array) -> None:
         crawl(url, queuePool, visited_urls, outfile)
     
     while (curr_crawler_size < crawler_limit):
+        filename = 'data/data_' + str(id) + '_' + str(file_cnt) + '.json' 
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        outfile = open(filename, 'w')
+
         while (curr_file_size < MAX_FILE_SIZE):
             curr_file_size = os.path.getsize(filename) / (1024*1024.0)
             #hashDoc("nba basketball tournament us countries")
@@ -117,9 +121,7 @@ def crawler(id: int, queuePool: Array) -> None:
         print("Crawler", id, ":", '%0.2f' % curr_crawler_size, ' MB')
         file_cnt += 1
 
-        filename = 'data/data_' + str(id) + '_' + str(file_cnt) + '.json' 
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
-        outfile = open(filename, 'w')
+        
 
 if __name__ == '__main__':
     with Pool(processes=workers) as pool:
