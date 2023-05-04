@@ -153,7 +153,7 @@ def hashDoc(textBody):
                 finalFingerPrint += ('1')
             else:
                 finalFingerPrint += ('0')
-        if(finalFingerPrint not in currentFingerprints):
+        if(finalFingerPrint not in currentFingerprints): #!!! currently used to check exact dupes, need to implement near-dupe check with hamming distance tmrw
             currentFingerprints.append(finalFingerPrint)
             return finalFingerPrint
         else:
@@ -169,7 +169,7 @@ def hashDoc(textBody):
         finalFingerPrint = format(int(finalFingerPrint, 16), '064b')
         #print('value: ', finalFingerPrint)
 
-    if(finalFingerPrint not in currentFingerprints):
+    if(finalFingerPrint not in currentFingerprints): #!!! currently used to check exact dupes, need to implement near-dupe check with hamming distance tmrw
         currentFingerprints.append(finalFingerPrint)
     else:
         return -1
