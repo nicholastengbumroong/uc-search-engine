@@ -36,7 +36,7 @@ def sameDomainOrEdu(url, seed_url):
     suffix = tldextract.extract(url).suffix
     seed_domain = tldextract.extract(seed_url).domain
     seed_suffix = tldextract.extract(seed_url).suffix
-    if ((suffix == "edu" or (domain == seed_domain and suffix == seed_suffix)) and not url.endswith(".html")):
+    if ((suffix == "edu" or (domain == seed_domain and suffix == seed_suffix)) and not url.endswith(".html") and not url.endswith(".pdf")):
         return True
     return False
      
