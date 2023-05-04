@@ -47,8 +47,8 @@ def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
         soup = BeautifulSoup(html_text, 'lxml') 
         body = soup.body.text
         simHash = hashDoc(body)
-        #if(simHash == -1): #possibly gonna be used to check dupes like this
-            #return
+        if(simHash == -1): #possibly gonna be used to check dupes like this
+            return
         
 
         data = {"url": url, "body": body}
@@ -147,7 +147,7 @@ def hashDoc(textBody):
                 #print(char)
                 wordSum += ord(char) #get the ascii value of the character and sum it across the word
             #print(wordSum)
-            wordSum = wordSum % 65536
+            wordSum = wordSum % 65536 # !!! possibly make 64
             binWordSum = format(wordSum, '016b') #turn wordSum into binary format
             bWordList.append(binWordSum) 
             #print(binWordSum)
@@ -164,7 +164,7 @@ def hashDoc(textBody):
                 finalFingerPrint += ('1')
             else:
                 finalFingerPrint += ('0')
-        if(finalFingerPrint not in currentFingerprints): #!!! currently used to check exact dupes, need to implement near-dupe check with hamming distance tmrw
+        if(dupeCheck(finalFingerPrint) != -1): #!!! currently used to check exact dupes, need to implement near-dupe check with hamming distance tmrw
             currentFingerprints.append(finalFingerPrint)
             return finalFingerPrint
         else:
@@ -180,9 +180,24 @@ def hashDoc(textBody):
         finalFingerPrint = format(int(finalFingerPrint, 16), '064b')
         #print('value: ', finalFingerPrint)
 
-    if(finalFingerPrint not in currentFingerprints): #!!! currently used to check exact dupes, need to implement near-dupe check with hamming distance tmrw
+    if(dupeCheck(finalFingerPrint) != -1): #!!! currently used to check exact dupes, need to implement near-dupe check with hamming distance tmrw
         currentFingerprints.append(finalFingerPrint)
     else:
+        #print('dupe: ', finalFingerPrint)
+        fileSimHash = open("testSimHash", 'a')
+    #    print('final:', finalFingerPrint)
+    #print(textBody.strip())
+        fileSimHash.write('final: ')
+        fileSimHash.write(finalFingerPrint)
+        fileSimHash.write(' dupe text: ')
+        json.dump(textBody, fileSimHash)
+        fileSimHash.write('\n')
+        fileSimHash.write('\n')
+        fileSimHash.write('\n')
+    #fileSimHash.write(textBody)
+    #fileSimHash.write('\n')
+#    fileSimHash.close()
+        
         return -1
 #    fileSimHash = open("testSimHash", 'a')
 #    print('final:', finalFingerPrint)
@@ -198,3 +213,16 @@ def hashDoc(textBody):
     #fileSimHash.write('\n')
 #    fileSimHash.close()
     return finalFingerPrint
+
+def dupeCheck(simHash):
+    matchingBits = 0
+    for currHash in currentFingerprints: #for every hash in the array
+        matchingBits = 0
+        for bit in range(64): #go through all 64 bits
+            if currHash[bit] == simHash[bit]: #if they match, increment matching bits
+                matchingBits += 1
+        if(matchingBits >= 54): #if more than 54/64 bits match, return -1 to indicate its a dupe
+            print('simhash: ', simHash, 'already there: ', currHash, 'matchingbits: ', matchingBits)
+            return -1
+    currentFingerprints.append(simHash)
+    return simHash
