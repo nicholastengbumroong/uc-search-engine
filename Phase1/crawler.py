@@ -21,11 +21,9 @@ seed_urls = []
 currentFingerprints = []
 TARGET_SIZE = 5        # in MB
 MAX_FILE_SIZE = 0.5       # in MB  
+#curr_total_size = 0        # in MB
 workers = 4
 maxHops = 6
-# maxPages = math.ceil(100/workers)
-# totalPagesCrawled = Value(c_int)
-# MB = 0
 
 with open('seeds.txt', 'r') as seeds:
     for seed in seeds:
@@ -41,7 +39,6 @@ def sameDomainOrEdu(url, seed_url):
     return False
      
 def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
-    global totalPagesCrawled
     if(url in visited_urls):
         return
     try:
@@ -56,9 +53,6 @@ def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
 
         data = {"url": url, "body": body}
         json.dump(data, outfile)
-        # with totalPagesCrawled.get_lock():
-        #     totalPagesCrawled.value += 1
-        #print('crawled : ', totalPagesCrawled.value)
         outfile.write('\n')
         visited_urls[url] = 0
         
@@ -87,10 +81,11 @@ def crawl(url, queuePool: Array, visited_urls, outfile) -> None:
     except Exception as e:
         print(e)
 
-def crawler(id: int, queuePool: Array) -> None: 
-    crawler_limit = TARGET_SIZE / workers
+def crawler(id: int, queuePool: Array, shared_total_size: float, lock) -> None: 
+    # global curr_total_size
+    # crawler_limit = TARGET_SIZE / workers
     curr_file_size = 0 
-    curr_crawler_size = 0
+    # curr_crawler_size = 0
     file_cnt = 0 
 
     visited_urls = {}
@@ -103,32 +98,38 @@ def crawler(id: int, queuePool: Array) -> None:
     for url in seed_urls:
         crawl(url, queuePool, visited_urls, outfile)
     
-    while (curr_crawler_size < crawler_limit):
+    while (shared_total_size.value <= TARGET_SIZE):
         filename = 'data/data_' + str(id) + '_' + str(file_cnt) + '.json' 
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         outfile = open(filename, 'w')
 
         while (curr_file_size < MAX_FILE_SIZE):
-            curr_file_size = os.path.getsize(filename) / (1024*1024.0)
             #hashDoc("nba basketball tournament us countries")
-            print(filename[5:], ":", '%0.2f' % curr_file_size, ' MB')
+            # print(filename[5:], ":", '%0.2f' % curr_file_size, ' MB')
             url = assignedQueue.get()
             #print('inner fetched url', url)
             crawl(url, queuePool, visited_urls, outfile)
-        curr_crawler_size += curr_file_size
+
+            temp_file_size = os.path.getsize(filename) / (1024*1024.0)
+            new_data_size = temp_file_size - curr_file_size
+            curr_file_size = temp_file_size
+            with lock:
+                shared_total_size.value += new_data_size
+                print(filename[5:], ":", '%0.2f' % curr_file_size, 'MB', '    Total Size: ', '%0.2f' % shared_total_size.value, 'MB')
+
+            if (shared_total_size.value >= TARGET_SIZE): break 
+
         curr_file_size = 0
         outfile.close()
-        print("Crawler", id, ":", '%0.2f' % curr_crawler_size, ' MB')
         file_cnt += 1
-
-        
 
 if __name__ == '__main__':
     with Pool(processes=workers) as pool:
         with Manager() as manager:
-            queuePoolArgs = []
             queuePool = [manager.Queue() for i in range(workers)]
-            poolArguments = [(i, queuePool) for i in range(workers)]
+            shared_total_size = manager.Value('f', 0.0)
+            lock = manager.Lock() 
+            poolArguments = [(i, queuePool, shared_total_size, lock) for i in range(workers)]
             pool.starmap(crawler, poolArguments)
 
 """
