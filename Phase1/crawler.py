@@ -84,7 +84,8 @@ def crawl(url, queuePool: Array, visited_urls, outfile, numHops, shared_fingerpr
             assignedQueueIndex = assignedQueueIndex % NUM_WORKERS
             queuePool[assignedQueueIndex].put((full_url, numHops)) 
     except Exception as e:
-        print(e)
+        #print(e)
+        return
 
 def crawler(id: int, queuePool: Array, shared_total_size: float, lock, shared_fingerprints) -> None: 
     curr_file_size = 0 
@@ -119,7 +120,7 @@ def crawler(id: int, queuePool: Array, shared_total_size: float, lock, shared_fi
             curr_file_size = temp_file_size
             with lock:
                 shared_total_size.value += new_data_size
-                print(filename[5:], ":", '%0.2f' % curr_file_size, 'MB', '    Total Size: ', '%0.2f' % shared_total_size.value, 'MB')
+                #print(filename[5:], ":", '%0.2f' % curr_file_size, 'MB', '    Total Size: ', '%0.2f' % shared_total_size.value, 'MB')
 
             if (shared_total_size.value >= TARGET_SIZE): break 
 
