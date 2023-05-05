@@ -17,6 +17,11 @@ import tldextract
 import os
 import hashlib
 
+#inputSeed = sys.argv[1]
+#inputMaxSize = sys.argv[2]
+#inputMaxHops = sys.argv[3]
+#inputOutputDir = sys.argv[4]
+
 seed_urls = []
 currentFingerprints = []
 workers = 8
