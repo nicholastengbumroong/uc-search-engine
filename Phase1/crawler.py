@@ -70,15 +70,15 @@ def getUrlHtml(url):
             hasAllowedContentType = True
     
     if(not hasAllowedContentType):
-        print(url, url_headers['Content-Type'], '❌ not in')
+        # print(url, url_headers['Content-Type'], '❌ not in')
         return ""
     
     html_text = requests.get(url, headers=user_agent).text
     if(not hasEndingHtmlTag(html_text)):
-        print(url, url_headers['Content-Type'], '❌')
+        # print(url, url_headers['Content-Type'], '❌')
         return ""
 
-    print(url, url_headers['Content-Type'], '✅')
+    # print(url, url_headers['Content-Type'], '✅')
     return html_text
 
 def crawl(url, queuePool: Array, visited_urls, outfile, numHops, shared_fingerprints) -> None:
