@@ -73,7 +73,7 @@ def getUrlHtml(url):
         # print(url, url_headers['Content-Type'], '❌ not in')
         return ""
     
-    html_text = requests.get(url).text.strip()
+    html_text = requests.get(url).text
     if(not hasEndingHtmlTag(html_text)):
         # print(url, url_headers['Content-Type'], '❌')
         return ""
