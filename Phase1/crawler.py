@@ -27,7 +27,7 @@ input_output_dir = sys.argv[4]
 NUM_WORKERS = 8
 MAX_HOPS = int(input_max_hops)
 TARGET_SIZE = float(input_max_size)        # in MB
-MAX_FILE_SIZE = TARGET_SIZE / NUM_WORKERS  # in MB  
+# MAX_FILE_SIZE = TARGET_SIZE / NUM_WORKERS  # in MB  
 
 seed_urls = []
 
@@ -101,6 +101,7 @@ def crawl(url, queuePool: Array, visited_urls, outfile, numHops, shared_fingerpr
         outfile.write('\n')
         visited_urls[url] = 0
         
+        
         numHops += 1
         links = soup.find_all('a')
         for link in links:
@@ -128,11 +129,10 @@ def crawl(url, queuePool: Array, visited_urls, outfile, numHops, shared_fingerpr
 
 def crawler(id: int, queuePool: Array, shared_total_size: float, lock, shared_fingerprints) -> None: 
     curr_file_size = 0 
-    file_cnt = 0 
 
     visited_urls = {}
     assignedQueue: Queue  = queuePool[id]
-    filename = input_output_dir + '/data_' + str(id) + '_' + str(file_cnt) + '.json' 
+    filename = input_output_dir + '/data_' + str(id) + '.json' 
     os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     outfile = open(filename, 'w')
@@ -142,30 +142,23 @@ def crawler(id: int, queuePool: Array, shared_total_size: float, lock, shared_fi
         crawl(url, queuePool, visited_urls, outfile, numHops, shared_fingerprints)
     
     while (shared_total_size.value <= TARGET_SIZE):
-        filename = 'data/data_' + str(id) + '_' + str(file_cnt) + '.json' 
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
-        outfile = open(filename, 'w')
+        getQueueTuple = assignedQueue.get()
+        url = getQueueTuple[0]
+        numHops = getQueueTuple[1]
+        # print("url: ", url, "hops :", numHops)
+        if(numHops < MAX_HOPS):
+            crawl(url, queuePool, visited_urls, outfile, numHops, shared_fingerprints)
 
-        while (curr_file_size < MAX_FILE_SIZE):
-            getQueueTuple = assignedQueue.get()
-            url = getQueueTuple[0]
-            numHops = getQueueTuple[1]
-            # print("url: ", url, "hops :", numHops)
-            if(numHops < MAX_HOPS):
-                crawl(url, queuePool, visited_urls, outfile, numHops, shared_fingerprints)
+        temp_file_size = os.path.getsize(filename) / (1024*1024.0)
+        new_data_size = temp_file_size - curr_file_size
+        curr_file_size = temp_file_size
+        with lock:
+            shared_total_size.value += new_data_size
+            print(filename[5:], ":", '%0.2f' % curr_file_size, 'MB', '    Total Size: ', '%0.2f' % shared_total_size.value, 'MB')
 
-            temp_file_size = os.path.getsize(filename) / (1024*1024.0)
-            new_data_size = temp_file_size - curr_file_size
-            curr_file_size = temp_file_size
-            with lock:
-                shared_total_size.value += new_data_size
-                #print(filename[5:], ":", '%0.2f' % curr_file_size, 'MB', '    Total Size: ', '%0.2f' % shared_total_size.value, 'MB')
+        if (shared_total_size.value >= TARGET_SIZE): break 
 
-            if (shared_total_size.value >= TARGET_SIZE): break 
-
-        curr_file_size = 0
-        outfile.close()
-        file_cnt += 1
+    outfile.close()
 
 def hashDoc(textBody, shared_fingerprints):
     wordList = textBody.split() #split the string input into a list of words
