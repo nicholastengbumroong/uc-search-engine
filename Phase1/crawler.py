@@ -91,14 +91,14 @@ def crawl(url, queuePool: Array, visited_urls, outfile, numHops, shared_fingerpr
         
         soup = BeautifulSoup(html_text, 'lxml') 
         body = soup.body.text
-        simHash = hashDoc(body, shared_fingerprints)
         
+        simHash = hashDoc(body, shared_fingerprints)
         if(simHash == -1):
             return
         
         data = {"url": url, "body": body}
         json.dump(data, outfile)
-        outfile.write('\n')
+        outfile.write(',\n')
         visited_urls[url] = 0
         
         
@@ -129,13 +129,13 @@ def crawl(url, queuePool: Array, visited_urls, outfile, numHops, shared_fingerpr
 
 def crawler(id: int, queuePool: Array, shared_total_size: float, lock, shared_fingerprints) -> None: 
     curr_file_size = 0 
-
     visited_urls = {}
     assignedQueue: Queue  = queuePool[id]
     filename = input_output_dir + '/data_' + str(id) + '.json' 
     os.makedirs(os.path.dirname(filename), exist_ok=True)
 
     outfile = open(filename, 'w')
+    outfile.write('[\n')
     # crawl starting with given seed pages
     for url in seed_urls:
         numHops = 0
@@ -154,10 +154,10 @@ def crawler(id: int, queuePool: Array, shared_total_size: float, lock, shared_fi
         curr_file_size = temp_file_size
         with lock:
             shared_total_size.value += new_data_size
-            print(filename[5:], ":", '%0.2f' % curr_file_size, 'MB', '    Total Size: ', '%0.2f' % shared_total_size.value, 'MB')
+            #print(filename[5:], ":", '%0.2f' % curr_file_size, 'MB', '    Total Size: ', '%0.2f' % shared_total_size.value, 'MB')
 
         if (shared_total_size.value >= TARGET_SIZE): break 
-
+    outfile.write(']')
     outfile.close()
 
 def hashDoc(textBody, shared_fingerprints):
