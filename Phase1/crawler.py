@@ -124,7 +124,7 @@ def crawl(url, queuePool: Array, visited_urls, outfile, numHops, shared_fingerpr
             assignedQueueIndex = assignedQueueIndex % NUM_WORKERS
             queuePool[assignedQueueIndex].put((full_url, numHops)) 
     except Exception as e:
-        print(e)
+        #print(e)
         return
 
 def crawler(id: int, queuePool: Array, shared_total_size: float, lock, shared_fingerprints) -> None: 
