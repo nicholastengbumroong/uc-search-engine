@@ -41,22 +41,62 @@ def sameDomainOrEdu(url, seed_url):
     suffix = tldextract.extract(url).suffix
     seed_domain = tldextract.extract(seed_url).domain
     seed_suffix = tldextract.extract(seed_url).suffix
-    if ((suffix == "edu" or (domain == seed_domain and suffix == seed_suffix)) and not url.endswith(".html") and not url.endswith(".pdf")):
+    if (suffix == "edu" or (domain == seed_domain and suffix == seed_suffix)):
         return True
     return False
-     
+
+def hasEndingHtmlTag(html_text):
+    n = len(html_text)
+    endingHtmlTag = '</html>'
+    endingHtmlTagLength = len(endingHtmlTag)
+    i = endingHtmlTagLength
+    while(i <= n):
+        matches = 0
+        for j in range(endingHtmlTagLength):
+            if(html_text[n - i + j] == endingHtmlTag[j]):
+                matches += 1
+        if (matches == endingHtmlTagLength):
+            return True
+        i += 1
+    return False
+
+def getUrlHtml(url):
+    url_headers = requests.head(url).headers
+
+    allowedContentTypes = ['text/plain', 'text/html']
+    hasAllowedContentType = False
+    for contentType in allowedContentTypes:
+        if(contentType in url_headers['Content-Type']):
+            hasAllowedContentType = True
+    
+    if(not hasAllowedContentType):
+        # print(url, url_headers['Content-Type'], '❌ not in')
+        return ""
+    
+    html_text = requests.get(url).text.strip()
+    if(not hasEndingHtmlTag(html_text)):
+        # print(url, url_headers['Content-Type'], '❌')
+        return ""
+
+    # print(url, url_headers['Content-Type'], '✅')
+    return html_text
+
 def crawl(url, queuePool: Array, visited_urls, outfile, numHops, shared_fingerprints) -> None:
     if(url in visited_urls):
         return
     try:
-        html_text = requests.get(url).text
+        
+        html_text = getUrlHtml(url)
+        if(html_text == ""):
+            return
+        
         soup = BeautifulSoup(html_text, 'lxml') 
         body = soup.body.text
         simHash = hashDoc(body, shared_fingerprints)
-        if(simHash == -1): #possibly gonna be used to check dupes like this
+        
+        if(simHash == -1):
             return
         
-
         data = {"url": url, "body": body}
         json.dump(data, outfile)
         outfile.write('\n')
@@ -84,7 +124,7 @@ def crawl(url, queuePool: Array, visited_urls, outfile, numHops, shared_fingerpr
             assignedQueueIndex = assignedQueueIndex % NUM_WORKERS
             queuePool[assignedQueueIndex].put((full_url, numHops)) 
     except Exception as e:
-        #print(e)
+        print(e)
         return
 
 def crawler(id: int, queuePool: Array, shared_total_size: float, lock, shared_fingerprints) -> None: 
