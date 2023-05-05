@@ -61,8 +61,8 @@ def hasEndingHtmlTag(html_text):
     return False
 
 def getUrlHtml(url):
-    url_headers = requests.head(url).headers
-
+    user_agent = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36'}
+    url_headers = requests.head(url, headers=user_agent).headers
     allowedContentTypes = ['text/plain', 'text/html']
     hasAllowedContentType = False
     for contentType in allowedContentTypes:
@@ -70,22 +70,21 @@ def getUrlHtml(url):
             hasAllowedContentType = True
     
     if(not hasAllowedContentType):
-        # print(url, url_headers['Content-Type'], '❌ not in')
+        print(url, url_headers['Content-Type'], '❌ not in')
         return ""
     
-    html_text = requests.get(url).text
+    html_text = requests.get(url, headers=user_agent).text
     if(not hasEndingHtmlTag(html_text)):
-        # print(url, url_headers['Content-Type'], '❌')
+        print(url, url_headers['Content-Type'], '❌')
         return ""
 
-    # print(url, url_headers['Content-Type'], '✅')
+    print(url, url_headers['Content-Type'], '✅')
     return html_text
 
 def crawl(url, queuePool: Array, visited_urls, outfile, numHops, shared_fingerprints) -> None:
     if(url in visited_urls):
         return
     try:
-        
         html_text = getUrlHtml(url)
         if(html_text == ""):
             return
@@ -124,7 +123,7 @@ def crawl(url, queuePool: Array, visited_urls, outfile, numHops, shared_fingerpr
             assignedQueueIndex = assignedQueueIndex % NUM_WORKERS
             queuePool[assignedQueueIndex].put((full_url, numHops)) 
     except Exception as e:
-        #print(e)
+        print(e)
         return
 
 def crawler(id: int, queuePool: Array, shared_total_size: float, lock, shared_fingerprints) -> None: 
