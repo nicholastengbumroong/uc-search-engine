@@ -17,14 +17,15 @@ import tldextract
 import os
 import hashlib
 
-# python crawler.py seeds.txt 500 100000 data 
+# python crawler.py seeds.txt 500 100000 data 8
 
 input_seed_file = sys.argv[1]
 input_max_size = sys.argv[2]
 input_max_hops = sys.argv[3]
 input_output_dir = sys.argv[4]
+input_num_workers = sys.argv[5]
 
-NUM_WORKERS = 8
+NUM_WORKERS = input_num_workers
 MAX_HOPS = int(input_max_hops)
 TARGET_SIZE = float(input_max_size)        # in MB
 # MAX_FILE_SIZE = TARGET_SIZE / NUM_WORKERS  # in MB  
