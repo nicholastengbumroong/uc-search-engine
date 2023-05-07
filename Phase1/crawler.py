@@ -111,6 +111,10 @@ def crawl(url, queuePool: Array, visited_urls, outfile, numHops, shared_fingerpr
                     full_url = href
                 else:
                     continue
+                
+                if full_url.startswith('//'):
+                    full_url = 'https:' + full_url
+
             elif href.startswith('/'):
                 baseUrl = url[0: url.find(domain) + len(domain)] + "." + tldextract.extract(url).suffix
                 full_url = baseUrl + href
