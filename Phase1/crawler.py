@@ -86,6 +86,7 @@ def crawl(url, queuePool: Array, visited_urls, outfile, numHops, shared_fingerpr
         
         simHash = hashDoc(body, shared_fingerprints)
         if(simHash == -1):
+            visited_urls[url] = 0
             return
         
         data = {"url": url, "body": body}
