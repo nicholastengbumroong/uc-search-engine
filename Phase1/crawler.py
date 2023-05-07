@@ -166,60 +166,20 @@ def crawler(id: int, queuePool: Array, shared_total_size: float, lock, shared_fi
 
 def hashDoc(textBody, shared_fingerprints):
     wordList = textBody.split() #split the string input into a list of words
-    bWordList = [] #word list but after hashing into binary
-    hashAlg = 2 # 1 = in class hashing algorithm from slides, 2 = SHA-1 hashing algorithm
-
-    if(hashAlg == 1):
-        for word in wordList: #for each word in the list
-            wordSum = 0
-            for char in word: #for each character in the word 
-                wordSum += ord(char) #get the ascii value of the character and sum it across the word
-            binWordSum = format(wordSum, '064b') #turn wordSum into binary format
-            bWordList.append(binWordSum) 
-        finalFingerPrint = ""
-        for i in range(64): #iterates through the column of each word hashed in binary
-            colSum = 0
-            for j in range(len(bWordList)): #adds -1 or 1 depending on whether it is a 1 or 0 for that word
-                if bWordList[j][i] == '1':
-                    colSum += 1
-                else:
-                    colSum += -1
-
-            if(colSum > 0):
-                finalFingerPrint += ('1')
-            else:
-                finalFingerPrint += ('0')
-        if(dupeCheck(finalFingerPrint, shared_fingerprints) != -1): 
-            shared_fingerprints.append(finalFingerPrint)
-            return finalFingerPrint
-        else:
-            return -1
     
-    if(hashAlg == 2):
-        finalFingerPrint = ""
-        for word in wordList: #go through each word in doc
-            hashedWord = hashlib.sha1(word.encode("utf-8")).hexdigest() #hash each word
-            finalFingerPrint += hashedWord #concatenate hash of each word
-        finalFingerPrint = hashlib.sha1(finalFingerPrint.encode("utf-8")).hexdigest() #rehash the concatenation
-        finalFingerPrint = format(int(finalFingerPrint, 16), '064b')
+    finalFingerPrint = ""
+    for word in wordList: #go through each word in doc
+        hashedWord = hashlib.sha1(word.encode("utf-8")).hexdigest() #hash each word
+        finalFingerPrint += hashedWord #concatenate hash of each word
+    finalFingerPrint = hashlib.sha1(finalFingerPrint.encode("utf-8")).hexdigest() #rehash the concatenation
+    finalFingerPrint = format(int(finalFingerPrint, 16), '064b')
 
-    if(dupeCheck(finalFingerPrint, shared_fingerprints) != -1): 
-        shared_fingerprints.append(finalFingerPrint)
+    if(finalFingerPrint not in shared_fingerprints): 
+        shared_fingerprints[finalFingerPrint] = 0
     else:
         return -1
     return finalFingerPrint
 
-def dupeCheck(simHash, shared_fingerprints):
-    matchingBits = 0
-    for currHash in shared_fingerprints: #for every hash in the array
-        matchingBits = 0
-        for bit in range(64): #go through all 64 bits
-            if currHash[bit] == simHash[bit]: #if they match, increment matching bits
-                matchingBits += 1
-        if(matchingBits >= 54): #if more than 54/64 bits match, return -1 to indicate its a dupe
-            return -1
-    shared_fingerprints.append(simHash)
-    return simHash
 
 if __name__ == '__main__':
     with Pool(processes=NUM_WORKERS) as pool:
@@ -227,6 +187,6 @@ if __name__ == '__main__':
             queuePool = [manager.Queue() for i in range(NUM_WORKERS)]
             shared_total_size = manager.Value('f', 0.0)
             lock = manager.Lock() 
-            shared_fingerprints = manager.list()    
+            shared_fingerprints = manager.dict()    
             poolArguments = [(i, queuePool, shared_total_size, lock, shared_fingerprints) for i in range(NUM_WORKERS)]
             pool.starmap(crawler, poolArguments)
