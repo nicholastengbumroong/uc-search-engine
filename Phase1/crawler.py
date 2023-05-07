@@ -36,15 +36,6 @@ seed_urls = []
 with open(input_seed_file, 'r') as seeds:
     for seed in seeds:
         seed_urls.append(str(seed.strip()))
-    
-def sameDomainOrEdu(url, seed_url):
-    domain = tldextract.extract(url).domain
-    suffix = tldextract.extract(url).suffix
-    seed_domain = tldextract.extract(seed_url).domain
-    seed_suffix = tldextract.extract(seed_url).suffix
-    if (suffix == "edu" or (domain == seed_domain and suffix == seed_suffix)):
-        return True
-    return False
 
 def hasEndingHtmlTag(html_text):
     n = len(html_text)
@@ -102,28 +93,40 @@ def crawl(url, queuePool: Array, visited_urls, outfile, numHops, shared_fingerpr
         outfile.write(',\n')
         visited_urls[url] = 0
         
-        
+        full_url = None
         numHops += 1
         links = soup.find_all('a')
+        
         for link in links:
             href = link.get('href')
-            # check to see if url is part of same domain or an edu page 
+            domain = tldextract.extract(url).domain
+            
+            full_url = ""
+            
             if href is None:
                 continue
-            if href.startswith('http'): # check if href is its own link
-                if sameDomainOrEdu(href, url):  # check to see if link is an edu page 
+            
+            if href.startswith('http') or href.startswith('//'):
+                if tldextract.extract(href).suffix == "edu":
                     full_url = href
                 else:
                     continue
-            else:                       # else it is part of same domain
-                full_url = url + href
-                if not sameDomainOrEdu(full_url, url):
-                    continue 
+                
+                if full_url.startswith('//'):
+                    full_url = 'https:' + full_url
+
+            elif href.startswith('/'):
+                baseUrl = url[0: url.find(domain) + len(domain)] + "." + tldextract.extract(url).suffix
+                full_url = baseUrl + href
+            else:
+                continue
+
             assignedQueueIndex = 0
             for char in full_url:
                 assignedQueueIndex += ord(char)
             assignedQueueIndex = assignedQueueIndex % NUM_WORKERS
             queuePool[assignedQueueIndex].put((full_url, numHops)) 
+            
     except Exception as e:
         #print(e)
         return
