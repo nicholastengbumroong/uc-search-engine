@@ -24,22 +24,6 @@ for file in os.listdir(crawled_data_path):
             documents += crawled_data_json
 print(len(documents))
 
-sample_doc = [
-    {
-        'title' : 'A',
-        'context' : 'lucene is a useful tool for searching and information retrieval'
-        },
-    {
-        'title' : 'B',
-        'context' : 'Bert is a deep learning transformer model for encoding textual data'
-    },
-    {
-        'title' : 'C',
-        'context' : 'Django is a python web framework for building backend web APIs'
-    }
-]
-
-
 def create_index(dir):
     if not os.path.exists(dir):
         os.mkdir(dir)
@@ -58,15 +42,17 @@ def create_index(dir):
     contextType.setTokenized(True)
     contextType.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS)
 
-    for sample in sample_doc:
-        title = sample['title']
-        context = sample['context']
+    for document in documents:
+        title = document['title']
+        url = document['url']
+        body = document['body']
 
         doc = Document()
         doc.add(Field('Title', str(title), metaType))
-        doc.add(Field('Context', str(context), contextType))
+        doc.add(Field('Context', str(body), contextType))
+        doc.add(Field('Url', str(url), metaType))
         writer.addDocument(doc)
     writer.close()
 
 lucene.initVM(vmargs=['-Djava.awt.headless=true'])
-#create_index('sample_lucene_index/')
+create_index('lucene_index/')
