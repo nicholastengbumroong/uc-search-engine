@@ -7,7 +7,7 @@ import json
 from org.apache.lucene.store import MMapDirectory, SimpleFSDirectory, NIOFSDirectory
 from java.nio.file import Paths
 from org.apache.lucene.analysis.standard import StandardAnalyzer
-from org.apache.lucene.document import Document, Field, FieldType
+from org.apache.lucene.document import Document, Field, FieldType, StringField
 from org.apache.lucene.queryparser.classic import QueryParser
 from org.apache.lucene.index import FieldInfo, IndexWriter, IndexWriterConfig, IndexOptions, DirectoryReader
 from org.apache.lucene.search import IndexSearcher, BoostQuery, Query
@@ -50,7 +50,7 @@ def create_index(dir):
         doc = Document()
         doc.add(Field('Title', str(title), metaType))
         doc.add(Field('Context', str(body), contextType))
-        doc.add(Field('Url', str(url), metaType))
+        doc.add(Field('Url', str(url), StringField.TYPE_STORED))
         writer.addDocument(doc)
     writer.close()
 

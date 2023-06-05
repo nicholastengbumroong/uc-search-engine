@@ -12,6 +12,13 @@ from org.apache.lucene.index import FieldInfo, IndexWriter, IndexWriterConfig, I
 from org.apache.lucene.search import IndexSearcher, BoostQuery, Query
 from org.apache.lucene.search.similarities import BM25Similarity
 
+from flask import Flask, request, render_template
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return render_template('input.html')  #home page html here
+
 def retrieve(storedir, query):
     searchDir = NIOFSDirectory(Paths.get(storedir))
     searcher = IndexSearcher(DirectoryReader.open(searchDir))
@@ -29,7 +36,24 @@ def retrieve(storedir, query):
         })
 
     print(topkdocs)
+    return topkdocs
+
+@app.route("/submit", methods = ['POST', 'GET'])
+def search():
+    if request.method == 'GET':
+        return f"Weewoo"
+    if request.method == 'POST':
+        form = request.form
+        query = form['query']
+        print(f"query: {query}") #for testing
+        lucene.getVMEnv().attachCurrentThread()
+        results = retrieve('lucene_index/', str(query))
+        print(results) #for testing
+
+        return render_template('output.html', lucene_output = results)
 
 
 lucene.initVM(vmargs=['-Djava.awt.headless=true'])
-retrieve('lucene_index/', 'oranges')
+
+if __name__ == "__main__":
+    app.run(debug=True)
