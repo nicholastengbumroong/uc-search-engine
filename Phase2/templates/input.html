@@ -1,4 +1,19 @@
-<form action ="/submit" method = "POST">
-	<p>Query <input type = "text" name = "query" /> </p>
-	<p> <input type = "submit" value = "Submit"/> </p>
-</form>
+<!DOCTYPE html>
+<html>
+    <head> 
+        <meta charset="UTF-8">
+        <title>UC system Web Search</title>
+        <link rel = "stylesheet" href = "{{ url_for('static',filename='styles/styles.css') }}">
+    </head>
+
+    <body> 
+        <div class="container">
+            <h1>UC System Web Search</h1>
+            <p>Search for anything UC system related!</p>
+            <form action = "/submit" method = "POST">
+                <input type = "text" name = "query" placeholder = "Search or type URL"/>
+                <p> <input type = "submit" value = "Submit"/> </p>
+            </form>
+        </div>
+    </body>
+</html>
