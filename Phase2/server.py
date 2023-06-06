@@ -41,7 +41,7 @@ def retrieve(storedir, query):
 @app.route("/submit", methods = ['POST', 'GET'])
 def search():
     if request.method == 'GET':
-        return f"Weewoo"
+        return render_template('input.html')
     if request.method == 'POST':
         form = request.form
         query = form['query']
