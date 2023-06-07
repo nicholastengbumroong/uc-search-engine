@@ -32,7 +32,9 @@ def retrieve(storedir, query):
         doc = searcher.doc(hit.doc)
         topkdocs.append({
             "score": hit.score,
-            "text": doc.get("Url")
+            "url": doc.get("Url"),
+            "title": doc.get("Title"),
+            "context": doc.get("Context")[0:360]
         })
 
     print(topkdocs)
@@ -45,12 +47,17 @@ def search():
     if request.method == 'POST':
         form = request.form
         query = form['query']
+
+        # prevents crash if query is empty
+        if not query:
+            return render_template('output.html', lucene_output = [], query = query)     
+
         print(f"query: {query}") #for testing
         lucene.getVMEnv().attachCurrentThread()
         results = retrieve('lucene_index/', str(query))
         print(results) #for testing
 
-        return render_template('output.html', lucene_output = results)
+        return render_template('output.html', lucene_output = results, query = query)
 
 
 lucene.initVM(vmargs=['-Djava.awt.headless=true'])

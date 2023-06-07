@@ -1,8 +1,32 @@
-{% for item in lucene_output %}
-<h2> Score: {{item['score']}}</h2>
-<h2> Passage: {{item['text']}}</h2>
-{% endfor %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>UC System Web Search</title>
+    <link rel="stylesheet" href="{{ url_for('static',filename='styles/styles.css') }}" />
+  </head>
 
-<form action ="/submit" method = "GET">
-	<p><input type = "submit" value = "Search Again" /> </p>
-</form>
+	<body id="output">
+		<div class="header">
+			<h1>>UC System Web Search</h1>
+			<form action = "/submit" method = "POST">
+				<input type = "text" name = "query" placeholder = "Search or type URL" value = "{{query}}"/>
+				<input type = "submit" value = "Submit"/>
+			</form>
+		</div>
+
+		<div class="results">
+			{% for item in lucene_output %}
+			<div class="result">
+				<div class="result-head">
+					<h1><a href="{{item['url']}}">{{item['title']}}</a></h1>
+					<p>{{item['url']}} <br>Score: {{item['score']}}<br></p>
+				</div>
+				<p>{{item['context']}} ...</p>
+			</div>
+			{% endfor %}
+		</div>
+  	
+	</body>
+
+</html>

@@ -26,6 +26,7 @@ form {
     border-radius: 50px; 
     padding: 5px;
     font-size: 16px;
+    padding-left: 16px;
 }
 .container input[type="text"]::placeholder {
     color: gray; 
@@ -40,3 +41,80 @@ form {
   font-size: 16px;
   cursor: pointer;
 }
+
+#output {
+  background-color: #005581;
+  color: #ffffff;
+  display: block;
+  justify-content: left;
+  margin: 10px 10px 10px 10px;
+}
+
+.header {
+  margin: 0px 0px 0px 0px;
+  border-bottom: 3px solid #e9a44a;
+}
+
+.header h1 {
+  margin-left: 100px; 
+  font-size: 30px;
+}
+
+.header input[type="text"] {
+  width: 500px;
+  height: 30px;
+  margin: 0px 20px 10px 90px; 
+  border: 1px solid #ffffff;
+  border-radius: 50px; 
+  padding-left: 16px; 
+}
+
+.header input[type="submit"] {
+  width: 100px;
+  height: 30px;
+  background-color: #e9a44a;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.results {
+  margin: 30px 100px 30px 100px;
+  padding-bottom: 20px;
+}
+
+.result {
+  margin: 0px 0px 42px 0px; 
+}
+
+.result p {
+  color: #e8e8e8;
+  margin-top: 5px;
+}
+
+.result-head h1 {
+  font-size: 22px;
+}
+
+.result-head p {
+  color: #ffffff;
+  margin-top: 2px;
+  margin-bottom: 8px; 
+}
+
+.result-head a:link {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.result-head a:visited {
+  color: #e9a44a;
+  text-decoration: none;
+}
+
+.result-head a:hover {
+  text-decoration: underline; 
+}
+
