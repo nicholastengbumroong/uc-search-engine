@@ -1,4 +1,4 @@
-# CS172-Project
+# UC System Search Engine
 ### Installations
   - Check to see which version of pyhton you are running on `python3 --version`
   - Upgrade pip so we avoid potential problems with the other installations, run `pip install --upgrade pip` 
